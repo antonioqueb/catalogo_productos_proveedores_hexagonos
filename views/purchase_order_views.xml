@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extensión de la vista de orden de compra con contexto mejorado -->
+    <record id="view_purchase_order_form_supplier_filter" model="ir.ui.view">
+        <field name="name">purchase.order.form.supplier.filter</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Información después del proveedor -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <div class="alert alert-info" role="alert" 
+                     invisible="not partner_id">
+                    <i class="fa fa-info-circle"/> 
+                    Solo se mostrarán productos autorizados para este proveedor
+                </div>
+            </xpath>
+            
+            <!-- Modificar contexto de las líneas de orden -->
+            <xpath expr="//field[@name='order_line']" position="attributes">
+                <attribute name="context">{
+                    'supplier_filter': partner_id,
+                    'purchase_line_warn_price': True,
+                    'default_partner_id': partner_id,
+                    'active_model': 'purchase.order',
+                    'active_id': id,
+                    'purchase_order_context': True,
+                    'debug_filtering': True,
+                    'search_default_available': 1
+                }</attribute>
+                <attribute name="domain">[]</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista tree específica para líneas de orden con filtrado -->
+    <record id="view_purchase_order_line_tree_supplier_filter" model="ir.ui.view">
+        <field name="name">purchase.order.line.tree.supplier.filter</field>
+        <field name="model">purchase.order.line</field>
+        <field name="inherit_id" ref="purchase.purchase_order_line_tree"/>
+        <field name="arch" type="xml">
+            <!-- Modificar el campo product_id con contexto específico -->
+            <xpath expr="//field[@name='product_id']" position="attributes">
+                <attribute name="context">{
+                    'supplier_filter': parent.partner_id,
+                    'purchase_line_warn_price': True,
+                    'default_partner_id': parent.partner_id,
+                    'active_model': 'purchase.order',
+                    'purchase_order_context': True,
+                    'debug_filtering': True
+                }</attribute>
+                <attribute name="domain">[]</attribute>
+                <attribute name="options">{'no_create': True, 'no_create_edit': True}</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Action para productos con filtro específico -->
+    <record id="action_product_product_supplier_filtered" model="ir.actions.act_window">
+        <field name="name">Productos Autorizados</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('purchase_ok', '=', True)]</field>
+        <field name="context">{
+            'supplier_filter': active_id,
+            'search_default_available': 1,
+            'debug_filtering': True
+        }</field>
+    </record>
+
+    <!-- Vista tree para productos con información de proveedores -->
+    <record id="view_product_product_tree_supplier_info" model="ir.ui.view">
+        <field name="name">product.product.tree.supplier.info</field>
+        <field name="model">product.product</field>
+        <field name="type">list</field>
+        <field name="arch" type="xml">
+            <list string="Productos Disponibles">
+                <field name="default_code"/>
+                <field name="name"/>
+                <field name="product_tmpl_id" invisible="1"/>
+                <field name="uom_id"/>
+                <field name="list_price"/>
+                <field name="standard_price" groups="base.group_user"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Filtros mejorados para búsqueda de productos -->
+    <record id="view_product_product_search_supplier_filter" model="ir.ui.view">
+        <field name="name">product.product.search.supplier.filter</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_search_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='services']" position="after">
+                <separator/>
+                <filter string="Disponible para Compra" name="available" 
+                        domain="[('purchase_ok', '=', True)]"/>
+                <filter string="Con Proveedores Autorizados" name="with_suppliers" 
+                        domain="[('product_tmpl_id.supplier_ids', '!=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista para gestión de catálogo proveedor-producto -->
+    <record id="action_supplier_product_catalog" model="ir.actions.act_window">
+        <field name="name">Catálogo Productos por Proveedor</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('purchase_ok', '=', True)]</field>
+        <field name="context">{'search_default_with_suppliers': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Gestiona el catálogo de productos por proveedor!
+            </p>
+            <p>
+                Aquí puedes asignar proveedores autorizados a cada producto.
+                Solo los productos con proveedores autorizados aparecerán en las órdenes de compra.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú para el catálogo -->
+    <menuitem
+        id="menu_supplier_product_catalog"
+        name="Catálogo Productos-Proveedores"
+        parent="purchase.menu_purchase_config"
+        action="action_supplier_product_catalog"
+        sequence="50"/>
+</odoo>

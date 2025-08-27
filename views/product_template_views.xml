@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extensión de vista de producto -->
+    <record id="view_product_template_form_supplier_extension" model="ir.ui.view">
+        <field name="name">product.template.form.supplier.extension</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Proveedores Autorizados" name="authorized_suppliers" 
+                      groups="purchase.group_purchase_user">
+                    <group>
+                        <field name="supplier_ids" widget="many2many_tags" 
+                               placeholder="Selecciona los proveedores autorizados para este producto"/>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Información:</strong> Solo los proveedores seleccionados aquí podrán ver este producto en sus órdenes de compra.
+                    </div>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <!-- Vista de lista con proveedores -->
+    <record id="view_product_template_tree_supplier_extension" model="ir.ui.view">
+        <field name="name">product.template.tree.supplier.extension</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="list_price" position="after">
+                <field name="supplier_ids" widget="many2many_tags" optional="hide"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Filtros de búsqueda -->
+    <record id="view_product_template_search_supplier_extension" model="ir.ui.view">
+        <field name="name">product.template.search.supplier.extension</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <search position="inside">
+                <field name="supplier_ids" string="Proveedor Autorizado"/>
+                <filter string="Con Proveedores Autorizados" name="with_suppliers" 
+                        domain="[('supplier_ids', '!=', False)]"/>
+                <filter string="Sin Proveedores Autorizados" name="without_suppliers" 
+                        domain="[('supplier_ids', '=', False)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Proveedores" name="group_suppliers" 
+                            context="{'group_by': 'supplier_ids'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>
