@@ -105,35 +105,3 @@ patch(Many2OneField.prototype, {
         return result;
     }
 });
-
-// Patch específico para el comportamiento de búsqueda en Many2One
-import { Many2OnePopup } from "@web/views/fields/many2one/many2one_popup/many2one_popup";
-
-patch(Many2OnePopup.prototype, {
-    
-    setup() {
-        super.setup();
-        
-        // Asegurar que el contexto se pase correctamente al popup
-        if (this.props.context && this.props.context.supplier_filter) {
-            console.log("Popup Many2One con filtro de proveedor:", this.props.context.supplier_filter);
-        }
-    },
-
-    get searchProps() {
-        const props = super.searchProps;
-        
-        // Mantener el contexto en las props de búsqueda
-        if (this.props.context?.supplier_filter) {
-            props.context = {
-                ...props.context,
-                supplier_filter: this.props.context.supplier_filter,
-                debug_filtering: true
-            };
-            
-            console.log("SearchProps con contexto:", props.context);
-        }
-        
-        return props;
-    }
-});
